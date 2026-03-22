@@ -2,7 +2,7 @@
 
 A system-level website blocker for Linux. Blocks domains via `/etc/hosts` and freezes the file afterwards — independent of browser, VPN, or browser extensions.
 
-Compatible with **ext4** and **btrfs**, tested on Arch-based distributions and Fedora.
+Compatible with **ext4** and **btrfs**, tested on Arch-based distributions.
 
 ## Requirements
 
