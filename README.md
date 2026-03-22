@@ -1,14 +1,14 @@
 # fokus
 
-Website-Blocker auf Systemebene für Linux. Sperrt Domains über `/etc/hosts` und friert die Datei anschließend ein — unabhängig von Browser, VPN oder Browser-Extensions.
+A system-level website blocker for Linux. Blocks domains via `/etc/hosts` and freezes the file afterwards — independent of browser, VPN, or browser extensions.
 
-Kompatibel mit **ext4** und **btrfs**, getestet auf Arch-basierten Distributionen und Fedora.
+Compatible with **ext4** and **btrfs**, tested on Arch-based distributions and Fedora.
 
-## Voraussetzungen
+## Requirements
 
-- Linux mit bash
-- `sudo`-Rechte
-- `e2fsprogs` für `chattr` (nur bei ext4 — auf den meisten Systemen vorinstalliert)
+- Linux with bash
+- `sudo` privileges
+- `e2fsprogs` for `chattr` (ext4 only — pre-installed on most systems)
 
 ## Installation
 
@@ -16,67 +16,67 @@ Kompatibel mit **ext4** und **btrfs**, getestet auf Arch-basierten Distributione
 bash install.sh
 ```
 
-Das Skript erkennt automatisch das Dateisystem, kopiert `fokus` nach `/usr/local/bin` und legt ein Backup der hosts-Datei unter `/etc/hosts.backup` an.
+The script automatically detects the filesystem, copies `fokus` to `/usr/local/bin`, and creates a backup of your hosts file at `/etc/hosts.backup`.
 
-## Verwendung
-
-```bash
-sudo fokus start             # Blocking aktivieren
-sudo fokus stop              # Blocking deaktivieren
-sudo fokus lock <minuten>    # stop für X Minuten sperren
-fokus status                 # Aktuellen Status anzeigen
-```
-
-### Beispiele
+## Usage
 
 ```bash
-sudo fokus start         # Blocking an
-sudo fokus lock 90       # stop für 90 Minuten deaktivieren
-fokus status             # Zeit der Sperre anzeigen
-sudo fokus stop          # schlägt fehl solange Sperre aktiv
-sudo fokus lock 0        # Sperre sofort aufheben (Notfall)
-sudo fokus stop          # jetzt möglich
+sudo fokus start            # Enable blocking
+sudo fokus stop             # Disable blocking
+sudo fokus lock <minutes>   # Prevent stop for X minutes
+fokus status                # Show current status
 ```
 
-## Domains konfigurieren
+### Examples
 
-Die gesperrten Domains werden direkt in `fokus.sh` im `BLOCKED_SITES`-Array definiert:
+```bash
+sudo fokus start        # Enable blocking
+sudo fokus lock 90      # Disable stop for 90 minutes
+fokus status            # Show remaining lock time
+sudo fokus stop         # Fails while lock is active
+sudo fokus lock 0       # Remove lock immediately (emergency)
+sudo fokus stop         # Now works
+```
+
+## Configuring domains
+
+Blocked domains are defined directly in `fokus.sh` in the `BLOCKED_SITES` array:
 
 ```bash
 BLOCKED_SITES=(
-    "beispiel.com"
-    "www.beispiel.com"
-    "m.beispiel.com"
+    "example.com"
+    "www.example.com"
+    "m.example.com"
 )
 ```
 
-Es empfiehlt sich, immer alle Varianten einer Domain einzutragen — mit und ohne `www.`, sowie `m.` für mobile Subdomains. Nach einer Änderung muss das Skript neu installiert werden:
+It is recommended to always add all variants of a domain — with and without `www.`, as well as `m.` for mobile subdomains. After any change, reinstall the script:
 
 ```bash
 bash install.sh
 ```
 
-## Wie es funktioniert
+## How it works
 
-**Blocking:** Beim `start` werden alle Domains aus `BLOCKED_SITES` mit der Adresse `127.0.0.1` in `/etc/hosts` eingetragen. Das Betriebssystem liest diese Datei vor jeder DNS-Anfrage — die Domain wird ins Nichts umgeleitet, bevor irgendein Netzwerktraffic entsteht. Das Blocking greift auf Domain-Ebene: `beispiel.com`, `beispiel.com/seite` und alle weiteren Pfade sind gleichermaßen gesperrt.
+**Blocking:** On `start`, all domains from `BLOCKED_SITES` are added to `/etc/hosts` pointing to `127.0.0.1` (your local machine). The OS reads this file before any DNS lookup — the domain is redirected to nowhere before any network traffic is sent. Blocking works at the domain level: `example.com`, `example.com/page`, and all other paths are blocked equally.
 
-**Immutable-Schutz:** Nach jeder Änderung wird die hosts-Datei eingefroren:
-- **ext4:** via `chattr +i` — selbst root kann die Datei nicht bearbeiten
-- **btrfs:** via `chmod 444` + root-Besitz — gleichwertiger Schutz
+**Immutable protection:** After every change, the hosts file is frozen:
+- **ext4:** via `chattr +i` — even root cannot edit the file
+- **btrfs:** via `chmod 444` + root ownership — equivalent protection
 
-**Lock:** `fokus lock <minuten>` schreibt einen Unix-Timestamp in `/etc/fokus.lock` und friert diese Datei ebenfalls ein. Solange die Zeit nicht abgelaufen ist, verweigert `stop` die Ausführung. Mit `lock 0` kann die Sperre im Notfall jederzeit aufgehoben werden.
+**Lock:** `fokus lock <minutes>` writes a Unix timestamp to `/etc/fokus.lock` and freezes that file as well. As long as the time has not elapsed, `stop` will refuse to execute. Use `lock 0` to remove the lock immediately in an emergency.
 
-## Deinstallation
+## Uninstallation
 
 ```bash
-sudo fokus stop                      # Blocking deaktivieren (falls aktiv)
-sudo rm /usr/local/bin/fokus         # Skript entfernen
-sudo rm -f /etc/fokus.lock           # Lock-Datei entfernen (falls vorhanden)
+sudo fokus stop                      # Disable blocking (if active)
+sudo rm /usr/local/bin/fokus         # Remove script
+sudo rm -f /etc/fokus.lock           # Remove lock file (if present)
 ```
 
-## Hosts-Datei wiederherstellen
+## Restoring the hosts file
 
-Falls etwas schiefläuft:
+If something goes wrong:
 
 ```bash
 # ext4
